@@ -1,0 +1,756 @@
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(1);
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var Util = __webpack_require__(2);
+
+/*
+  --------------------
+  differences
+  --------------------
+*/
+
+LineScroll = function(container, line) {
+  this.container = container;
+  this.line = line;
+
+  window.addEventListener('load', function() {
+    this.init();
+  }.bind(this), false);
+};
+
+LineScroll.prototype = {
+
+  init: function() {
+    Util.fire(this, ['setVariables', 'setUp', 'addListeners']);
+  },
+
+  // place on screen where the scroll-triggered interactions happen
+  scrollTrigger: 0.85,
+
+  setVariables: function() {
+    this.getMeasurements();
+    this.graphics = this.container.querySelectorAll('[data-difference-graphic]');
+    this.sections = this.container.querySelectorAll('[data-difference]');
+    this.lineInner = this.line.querySelector('[data-differences-line-inner]');
+  },
+
+  getMeasurements: function() {
+    this.rectangle = this.container.getBoundingClientRect();
+    this.scrollStart = this.rectangle.top - (window.innerHeight * this.scrollTrigger) + Util.scrollY();
+    this.scrollEnd = this.scrollStart + this.rectangle.height;
+  },
+
+  setUp: function() {
+    this.lineInner.style.height = this.rectangle.height + 'px';
+    window.setTimeout(this.scrollPos.bind(this), 1000);
+
+    // set up waypoint for main section
+    new Waypoint({
+      element: this.container,
+      handler: this.triggerContainer.bind(this),
+      offset: (this.scrollTrigger * 100) + '%'
+    });
+
+    // set up waypoints for individual sections
+    for (var s = 0, sLen = this.sections.length; s < sLen; s++) {
+      new Waypoint({
+        element: this.sections[s],
+        handler: this.triggerDifference,
+        offset: (this.scrollTrigger * 100) + '%'
+      });
+    }
+
+    // set up waypoints for graphics
+    for (var g = 0, gLen = this.graphics.length; g < gLen; g++) {
+      new Waypoint({
+        element: this.graphics[g],
+        handler: this.triggerGraphic,
+        offset: (this.scrollTrigger * 100) + '%'
+      });
+    }
+  },
+
+  addListeners: function() {
+    window.addEventListener(
+      'scroll',
+      Util.debounce(function() {
+        this.scrollPos();
+      }.bind(this), 5)
+    );
+
+    window.addEventListener(
+      'resize',
+      Util.debounce(function() {
+        this.getMeasurements();
+        this.lineInner.style.height = this.rectangle.height + 'px';
+        this.scrollPos();
+      }.bind(this), 500)
+    );
+  },
+
+  scrollPos: function() {
+    var scrollPos = Util.scrollY();
+
+    if (
+      scrollPos > this.scrollStart &&
+      scrollPos < this.scrollEnd
+    ) {
+      var scrollPx = scrollPos - this.scrollStart;
+      var percentScrolled = (scrollPx / this.rectangle.height) * 100;
+
+      this.line.style.height = percentScrolled + '%';
+    }
+  },
+
+  triggerContainer: function() {
+    this.line.style.height = '0%';
+  },
+
+  triggerDifference: function(direction) {
+    this.element.setAttribute(
+      'data-is',
+      (direction === 'down') ? 'active' : ''
+    );
+  },
+
+  triggerGraphic: function(direction) {
+    var connected = this.element.getAttribute('data-connection');
+    var action = (direction === 'down') ? 'active' : '';
+
+    this.element.setAttribute('data-is', action);
+
+    if (connected) {
+      var connectedElems = document.querySelectorAll(connected);
+
+      for (var i = 0, len = connectedElems.length; i < len; i++) {
+        connectedElems[i].setAttribute('data-is', action);
+      }
+    }
+  }
+
+};
+
+new LineScroll(
+  document.querySelector('[data-differences]'),
+  document.querySelector('[data-differences-line]')
+);
+
+
+
+/*
+  --------------------
+  CTA (video)
+  --------------------
+*/
+
+// variables
+var ctaVideo = document.getElementById('home-cta-video');
+var ctaContainer = document.querySelector('.home-cta');
+
+var isMobile = function() {
+  return (
+    // janky but simple way of filtering out mobile os's that don't support autoplay
+    Util.getMobileOperatingSystem() === 'iOS' ||
+    Util.getMobileOperatingSystem() === 'Android' ||
+
+    // also don't load up video on smaller screens
+    window.matchMedia('(max-width: 799px)').matches
+  ) ? true : false;
+};
+
+// remove video element on mobile devices
+if (isMobile()) ctaVideo.parentNode.removeChild(ctaVideo);
+
+// set waypoints to play/pause the cta background video to improve performance
+new Waypoint({
+  element: ctaContainer,
+  handler: function() {
+    if (!ctaVideo.paused) {
+      ctaVideo.pause();
+    } else if (ctaVideo.paused) {
+      ctaVideo.play();
+    }
+  },
+  offset: '100%'
+});
+
+
+/*
+  --------------------
+  causes
+  --------------------
+*/
+
+var Causes = function(elem) {
+  this.elem = elem;
+  this.init();
+};
+
+Causes.prototype = {
+
+  init: function() {
+    Util.fire(this, ['setVariables', 'setUp', 'addListeners']);
+  },
+
+  currentCause: null,
+  scrollPosOnOpen: null,
+
+  setVariables: function() {
+    this.causeItems = this.elem.querySelectorAll('[data-causes-item]');
+    this.language = JSON.parse(this.elem.getAttribute('data-language'));
+
+    this.onScroll = this.scrollDismiss.bind(this);
+  },
+
+  setUp: function() {
+    for (var i = 0, len = this.causeItems.length; i < len; i++) {
+      new CauseItem(this.causeItems[i]);
+    }
+
+    this.addUiBlock();
+  },
+
+  addUiBlock: function() {
+
+    // ui block
+    this.uiBlock = document.createElement('div');
+    this.uiBlock.classList.add('data-causes-uiblock');
+
+    // close button
+    this.uiClose = this.createButton('home-causes-uiblock-close', this.language.close);
+    this.uiBlock.appendChild(this.uiClose);
+
+    var prevNext = document.createElement('div');
+    prevNext.classList.add('home-causes-prevNext');
+
+    var prevNextInner = document.createElement('div');
+    prevNextInner.classList.add('home-causes-prevNext-inner');
+    prevNext.appendChild(prevNextInner);
+
+    // prev button
+    this.prev = this.createButton('home-causes-prev', this.language.prev);
+    prevNextInner.appendChild(this.prev);
+
+    // next button
+    this.next = this.createButton('home-causes-next', this.language.prev);
+    prevNextInner.appendChild(this.next);
+
+    this.uiBlock.appendChild(prevNext);
+    document.body.appendChild(this.uiBlock);
+  },
+
+  createButton: function(className, text) {
+    var newButton = document.createElement('button');
+    newButton.classList.add(className);
+    newButton.innerHTML = '<span class="a11y-sr-only">' + text + '</span>';
+
+    return newButton;
+  },
+
+  addListeners: function() {
+    this.uiBlock.addEventListener('click', this.close.bind(this));
+    this.uiClose.addEventListener('click', this.close.bind(this));
+
+    window.pubSub.subscribe('openCauseUiBlock', this.open.bind(this));
+
+    this.prev.addEventListener('click', this.prevCause.bind(this));
+    this.next.addEventListener('click', this.nextCause.bind(this));
+  },
+
+  open: function(obj) {
+    this.scrollPosOnOpen = Util.scrollY();
+    this.currentCause = this.matchElem(obj.elem);
+
+    this.uiBlock.setAttribute('data-is', 'blocking');
+
+    window.addEventListener('scroll', this.onScroll);
+  },
+
+  matchElem: function(elem) {
+    for (var i = 0, len = this.causeItems.length; i < len; i++) {
+      if (elem === this.causeItems[i]) return i;
+    }
+  },
+
+  close: function(event) {
+    this.currentCause = null;
+
+    this.uiBlock.removeAttribute('data-is');
+
+    window.pubSub.publish('closeCause');
+    window.removeEventListener('scroll', this.onScroll);
+
+    event.stopPropagation();
+    event.preventDefault();
+  },
+
+  prevCause: function(event) {
+    window.pubSub.publish('closeCause');
+
+    var newCause = this.currentCause - 1;
+    if (newCause < 0) newCause = this.causeItems.length - 1;
+
+    this.triggerCause(newCause);
+
+    event.stopPropagation();
+    event.preventDefault();
+  },
+
+  nextCause: function(event) {
+    window.pubSub.publish('closeCause');
+
+    var newCause = this.currentCause + 1;
+    if (newCause > this.causeItems.length - 1) newCause = 0;
+
+    this.triggerCause(newCause);
+
+    event.stopPropagation();
+    event.preventDefault();
+  },
+
+  triggerCause: function(target) {
+    var button = this.causeItems[target].querySelector('[data-causes-item-trigger]');
+    button.click();
+  },
+
+  scrollDismiss: function(event) {
+    var scrollPos = Util.scrollY();
+    var dismissFactor = window.innerHeight * 0.2;
+
+    if (
+      scrollPos < (this.scrollPosOnOpen - dismissFactor) ||
+      scrollPos > (this.scrollPosOnOpen + dismissFactor)
+    ) {
+      this.close(event);
+    }
+  }
+
+};
+
+
+var CauseItem = function(elem) {
+  this.elem = elem;
+  this.init();
+};
+
+CauseItem.prototype = {
+
+  init: function() {
+    Util.fire(this, ['setVariables', 'addListeners']);
+  },
+
+  doppelganger: null,
+  elemHeight: 0,
+  isOpen: false,
+  popTimer: null,
+  scrollPosOnOpen: null,
+  startPos: null,
+
+  setVariables: function() {
+    this.contentWrapper = document.querySelector('[data-a11y-content-wrapper]');
+    this.trigger = this.elem.querySelector('[data-causes-item-trigger]');
+
+    this.main = this.elem.querySelector('.home-causes-item-main');
+    var mainChildren = this.main.children;
+
+    // get a sum of the element heights
+    this.elemHeight = 0;
+    for (var i = 0, len = mainChildren.length; i < len; i++) {
+      this.elemHeight = this.elemHeight + mainChildren[i].offsetHeight;
+    }
+  },
+
+  addListeners: function() {
+    this.trigger.addEventListener('click', this.open.bind(this));
+    window.pubSub.subscribe('closeCause', this.close.bind(this));
+  },
+
+  open: function() {
+    if (!this.isOpen) {
+      var scrollPos = Util.scrollY();
+
+      // clone the element to open
+      this.doppelganger = this.elem.cloneNode(true);
+      this.matchPos('open');
+
+      // append the doppelganger to the body and hide the original
+      document.body.appendChild(this.doppelganger);
+      this.elem.setAttribute('data-hidden', '');
+      this.elem.setAttribute('data-is', '');
+
+      // a short delay allows the doppelganger to be positioned before animating
+      window.setTimeout(function() {
+        var vCenter = (window.innerHeight - this.startPos.height) / 2;
+        var parentElem = this.elem.parentNode;
+
+        // adjust styles after initial opening
+        var extraSpace = 40;
+        var desiredGap = 50;
+
+        // if the height doesn't allow for the desired gap resize the doppelganger
+        if (this.elemHeight >= this.main.clientHeight - extraSpace - desiredGap) {
+          var newHeight = this.elemHeight + extraSpace + desiredGap;
+          vCenter = (window.innerHeight - newHeight) / 2;
+          this.doppelganger.style.height = newHeight + 'px';
+          this.doppelganger.style.top = Math.ceil(vCenter) + 'px';
+        } else {
+          this.doppelganger.style.top = Math.ceil(vCenter) + 'px';
+        }
+
+        this.doppelganger.style.left = Math.ceil(parentElem.getBoundingClientRect().left) + 'px';
+
+        this.doppelganger.setAttribute('data-is', 'open');
+
+        // make the main content hidden from screen readers
+        this.contentWrapper.setAttribute('aria-hidden', 'true');
+
+        // broadcast the open event to open the ui block
+        window.pubSub.publish('openCauseUiBlock', {
+          elem: this.elem
+        });
+
+        this.isOpen = true;
+      }.bind(this), 20);
+    }
+  },
+
+  close: function() {
+    if (this.isOpen) {
+
+      // move the doppelganger back to the starting position
+      this.matchPos('close');
+      this.doppelganger.removeAttribute('data-is');
+
+      // make the main content accessible again
+      this.contentWrapper.removeAttribute('aria-hidden');
+
+      this.isOpen = false;
+
+      // set a brief timeout before removing the doppelganger
+      window.setTimeout(function() {
+        this.elem.removeAttribute('data-hidden');
+        this.doppelganger.parentNode.removeChild(this.doppelganger);
+      }.bind(this), 200);
+    }
+  },
+
+  matchPos: function(state) {
+
+    // grab some dimensions
+    this.scrollPosOnOpen = Util.scrollY();
+    this.startPos = this.elem.getBoundingClientRect();
+
+    this.doppelganger.classList.add('doppelganger');
+
+    // set starter dimensions on doppelganger
+    this.doppelganger.style.height = Math.ceil(this.startPos.height) + 'px';
+    this.doppelganger.style.top = Math.ceil(this.startPos.top) + 'px';
+    this.doppelganger.style.width = Math.ceil(this.startPos.width) + 'px';
+    this.doppelganger.style.left = Math.ceil(this.startPos.left) + 'px';
+  }
+
+};
+
+new Causes(
+  document.querySelector('[data-causes]')
+);
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var Vars = __webpack_require__(3);
+
+module.exports = {
+
+  getMobileOperatingSystem: function() {
+    var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+    if (
+      userAgent.match( /iPad/i ) ||
+      userAgent.match( /iPhone/i ) ||
+      userAgent.match( /iPod/i )
+    ) {
+      return 'iOS';
+    } else if (
+      userAgent.match( /Android/i )
+    ) {
+      return 'Android';
+    } else {
+      return 'unknown';
+    }
+  },
+
+  // extracts the file path from a background image computed style
+  getStyleSrc: function(src) {
+    return (src.match( /url\([^\)]+\)/gi ) || [''])[0].split(/[()'"]+/)[1];
+  },
+
+  // loops over an array of method names and executes them
+  fire: function(instance, methods) {
+    for (var i = 0, len = methods.length; i < len; i++) {
+      instance[methods[i]].call(instance);
+    }
+  },
+
+  // debounce function via: https://davidwalsh.name/javascript-debounce-function
+  debounce: function(func, wait, immediate) {
+    var timeout;
+
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) func.apply(context, args);
+    };
+  },
+
+  loadScript: function(src) {
+    var scriptTag = document.createElement('script');
+    var scripts = document.getElementsByTagName('script')[0];
+
+    scriptTag.type = 'text/javascript';
+    scriptTag.src = src;
+    scripts.parentNode.insertBefore(scriptTag, scripts);
+  },
+
+  scrollTo: function(element, to, duration) {
+    if (duration <= 0) return;
+    var difference = to - element.scrollLeft;
+    var perTick = difference / duration * 10;
+
+    setTimeout(function() {
+      element.scrollLeft = element.scrollLeft + perTick;
+      if (element.scrollLeft === to) return;
+      this.scrollTo(element, to, duration - 10);
+    }.bind(this), 10);
+  },
+
+  guid: function() {
+    var s4 = function() {
+      return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    };
+
+    return s4() + s4() + s4();
+  },
+
+  focusRestrict: function(event, container, condition) {
+    if (event.which === Vars.keys.TAB && condition) {
+      var list = container.querySelectorAll('a, button, input, select, textarea, video, audio, iframe, embed, object');
+      var focusableTmp = Array.prototype.slice.call(list);
+      var focusable = [];
+
+      // loop over list and filter out any elements with a tabindex of -1
+      for (var i = 0, len = focusableTmp.length; i < len; i++) {
+        if (focusableTmp[i].getAttribute('tabindex') !== '-1') {
+          focusable.push(focusableTmp[i]);
+        }
+      }
+
+      var listLength = focusable.length;
+      var focused = document.activeElement;
+      var focusIndex = focusable.indexOf(focused);
+      var nextIndex;
+      var manageFocus;
+
+      // meet all the conditions!
+      if (focusIndex < listLength - 1 && !event.shiftKey) {
+        nextIndex = focusIndex + 1;
+        manageFocus = false;
+      } else if (focusIndex > 0 && event.shiftKey) {
+        nextIndex = focusIndex -1;
+        manageFocus = false;
+      } else if (focusIndex === listLength -1 && !event.shiftKey) {
+        nextIndex = 0;
+        manageFocus = true;
+      } else {
+        nextIndex = listLength -1;
+        manageFocus = true;
+      }
+
+      if (manageFocus) {
+        focusable[nextIndex].focus();
+
+        event.preventDefault();
+      }
+    }
+  },
+
+  // finds a specific dom element in the collection
+  // and returns the array position
+  getArrayPosition: function(array, elem) {
+    for (var i = 0, len = array.length; i < len; i++) {
+      if (array[i] === elem) return i;
+    }
+  },
+
+  // returns the height of the tallest element in a collection
+  returnTallest: function(arr) {
+    var maxHeight = 0;
+
+    for (var i = 0, len = arr.length; i < len; i++) {
+      arr[i].style.height = null;
+
+      var h = arr[i].offsetHeight;
+      if (h > maxHeight) maxHeight = h;
+    }
+
+    return maxHeight;
+  },
+
+  // get an element's exact position
+  // modified from: https://www.kirupa.com/html5/get_element_position_using_javascript.htm
+  getPosition: function(el) {
+    var xPos = 0;
+    var yPos = 0;
+
+    while (el) {
+      xPos += (el.offsetLeft + el.clientLeft);
+      yPos += (el.offsetTop + el.clientTop);
+
+      el = el.offsetParent;
+    }
+
+    return {
+      x: xPos,
+      y: yPos
+    };
+  },
+
+  scrollY: function() {
+    return window.scrollY || window.pageYOffset;
+  }
+
+};
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+module.exports = {
+
+  mq: {
+    small: '(min-width: 30em)', // 480px
+    medium: '(min-width: 47.5em)', // 760px
+    navigation: '(min-width: 62.5em)' // 1000px
+  },
+
+  keys: {
+    DOWN: 40,
+    RIGHT: 39,
+    UP: 38,
+    LEFT: 37,
+    ESC: 27,
+    TAB: 9
+  },
+
+  nav: document.querySelector('[data-nav]')
+
+};
+
+
+/***/ })
+/******/ ]);
+//# sourceMappingURL=home.js.map
